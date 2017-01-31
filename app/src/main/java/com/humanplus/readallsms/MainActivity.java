@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -24,6 +25,7 @@ import static android.widget.Toast.LENGTH_SHORT;
 public class MainActivity extends AppCompatActivity {
     private boolean check = false;
     private int requestCode = 1;
+    private final int SMS_MESSAGE = 2;
     private TextView textView;
     private EditText editText;
     private String str = "";
@@ -32,16 +34,15 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         textView = (TextView)findViewById(R.id.textView);
         editText = (EditText)findViewById(R.id.editText);
+
+        requestPermission(this);
     }
 
     protected void onClickButton(View v) {
         switch(v.getId()) {
             case R.id.button:
-                requestPermission(this);
-
                 // Put digit to find message
                 // If protocol == 0, Sent message
                 // otherwise(null) received message.
@@ -65,20 +66,26 @@ public class MainActivity extends AppCompatActivity {
             String body = c.getString(2);
             String protocol = c.getString(3);
 
-            output = String.format("address: %s, " +
-                    " timestamp: %d, body: %s, protocol: %s", address, timestamp, body, protocol);
-
             if(protocol == null) {
                 Log.d("발신", body);
+                str += "발신: "+body + "\n";
             } else {
                 Log.d("수신", body);
+                str += "수신: " +body + "\n";
             }
 
-            str += output + "\n";
         }
+        c.close();
 
         textView.setText(null);
         textView.setText(str);
+
+        Intent intent = new Intent(this, PopUpActivity.class);
+
+        // Give intent content of msg and destination number
+        intent.putExtra("msg", str);
+        intent.putExtra("addr", digit);
+        startActivity(intent);
     }
 
     private void requestPermission(Activity activity) {
@@ -92,7 +99,8 @@ public class MainActivity extends AppCompatActivity {
 
         //  When denied
         if(permissionCheck == PackageManager.PERMISSION_DENIED) {
-            ContextCompat.checkSelfPermission(currentActivity, Manifest.permission.READ_SMS);
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS);
+            ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS);
 
             // If we need additional explanation for using permission.
             if(ActivityCompat.shouldShowRequestPermissionRationale(currentActivity, Manifest.permission.READ_SMS)) {
@@ -100,12 +108,12 @@ public class MainActivity extends AppCompatActivity {
                 // Pop up dialog to grant permission from user.
                 AlertDialog.Builder dialog = new AlertDialog.Builder(currentActivity);
                 dialog.setTitle("권한 요청")
-                        .setMessage("메세지를 읽습니다.")
+                        .setMessage("메세지를 읽고 씁니다.")
                         .setPositiveButton("수락하기", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 ActivityCompat.requestPermissions(currentActivity,
-                                        new String[]{Manifest.permission.READ_SMS}, requestCode);
+                                        new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS}, requestCode);
                                 check = true;
                             }
                         })
@@ -122,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 // Request READ_CONTACT to android system
                 // 최초 실행시 권한 요청
                 ActivityCompat.requestPermissions(currentActivity,
-                        new String[]{Manifest.permission.READ_SMS}, requestCode);
+                        new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS}, requestCode);
             }
         }
     }
