@@ -14,9 +14,11 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,8 +29,11 @@ public class MainActivity extends AppCompatActivity {
     private int requestCode = 1;
     private final int SMS_MESSAGE = 2;
     private TextView textView;
+
     private EditText editText;
-    private String str = "";
+    private EditText inputText;
+    private String addr;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +41,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         textView = (TextView)findViewById(R.id.textView);
         editText = (EditText)findViewById(R.id.editText);
+        inputText = (EditText)findViewById(R.id.SMS_Input);
 
+
+
+
+        // 권한 요청
         requestPermission(this);
+
     }
 
     protected void onClickButton(View v) {
@@ -46,48 +57,18 @@ public class MainActivity extends AppCompatActivity {
                 // Put digit to find message
                 // If protocol == 0, Sent message
                 // otherwise(null) received message.
-                readMessage(editText.getText().toString());
+                addr = editText.getText().toString();
+
+                Intent intent = new Intent(this, PopUpActivity.class);
+
+                // Give intent content of msg and destination number
+                intent.putExtra("addr", addr);
+                startActivity(intent);
                 break;
         }
     }
 
-    private void readMessage(String digit) {
-        Uri allMessage = Uri.parse("content://sms");
-        ContentResolver cr = getContentResolver();
-        Cursor c = cr.query(allMessage,
-                new String[] {"address", "date", "body", "protocol"}
-        , "address='" + digit +"'", null, "date ASC");
-
-        String output = "";
-
-        while(c.moveToNext()) {
-            String address = c.getString(0);
-            long timestamp = c.getLong(1);
-            String body = c.getString(2);
-            String protocol = c.getString(3);
-
-            if(protocol == null) {
-                Log.d("발신", body);
-                str += "발신: "+body + "\n";
-            } else {
-                Log.d("수신", body);
-                str += "수신: " +body + "\n";
-            }
-
-        }
-        c.close();
-
-        textView.setText(null);
-        textView.setText(str);
-
-        Intent intent = new Intent(this, PopUpActivity.class);
-
-        // Give intent content of msg and destination number
-        intent.putExtra("msg", str);
-        intent.putExtra("addr", digit);
-        startActivity(intent);
-    }
-
+    // 권한 요청 부분
     private void requestPermission(Activity activity) {
         final Activity currentActivity = activity;
         int permissionCheck = ContextCompat.checkSelfPermission(currentActivity, Manifest.permission.READ_SMS);
@@ -127,6 +108,7 @@ public class MainActivity extends AppCompatActivity {
                         }).create().show();
                 return;
             } else {
+
                 // Request READ_CONTACT to android system
                 // 최초 실행시 권한 요청
                 ActivityCompat.requestPermissions(currentActivity,
