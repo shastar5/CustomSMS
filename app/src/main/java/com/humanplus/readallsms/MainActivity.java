@@ -34,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
     private EditText inputText;
     private String addr;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,9 +41,6 @@ public class MainActivity extends AppCompatActivity {
         textView = (TextView)findViewById(R.id.textView);
         editText = (EditText)findViewById(R.id.editText);
         inputText = (EditText)findViewById(R.id.SMS_Input);
-
-
-
 
         // 권한 요청
         requestPermission(this);

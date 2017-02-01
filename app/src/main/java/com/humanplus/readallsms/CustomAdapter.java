@@ -17,17 +17,48 @@ import java.util.ArrayList;
  */
 
 public class CustomAdapter extends BaseAdapter {
+
+
+    // Default constructor
     public class ListContents{
         String msg;
         int type;
         ListContents(String _msg,int _type)
         {
-            this.msg = _msg;
+            int len = _msg.length();
+            int count = 0;
+            String temp = "";
+
+            while(true) {
+                if(len - count < 10) {
+                    temp += _msg.substring(count, len);
+                    break;
+                }
+
+                temp += _msg.substring(count, (count += 10));
+                if(count != len)
+                    temp += "\n";
+            }
+            /*
+            // Used substring method to handle long message
+            if(_msg.length() > 15) {
+                String temp = "";
+                temp += _msg.substring(0, 9);
+                temp += "\n";
+                temp += _msg.substring(10, _msg.length());
+                this.msg = temp;
+            } else {
+                this.msg = _msg;
+            }
+            */
+
+            this.msg = temp;
             this.type = _type;
         }
     }
 
     private ArrayList<ListContents> m_List;
+
     public CustomAdapter() {
         m_List = new ArrayList();
     }
@@ -68,8 +99,6 @@ public class CustomAdapter extends BaseAdapter {
         View            viewRight = null;
         View            viewLeft = null;
 
-
-
         // 리스트가 길어지면서 현재 화면에 보이지 않는 아이템은 converView가 null인 상태로 들어 옴
         if ( convertView == null ) {
             // view가 null일 경우 커스텀 레이아웃을 얻어 옴
@@ -104,11 +133,25 @@ public class CustomAdapter extends BaseAdapter {
         if( m_List.get(position).type == 0 ) {
             text.setBackgroundResource(R.drawable.inbox2);
             layout.setGravity(Gravity.LEFT);
+
+            if(m_List.get(position).msg.length() > 15) {
+                layout.setPadding(20, 20, 0, 20);
+            } else {
+                layout.setPadding(20, 20, 0, 0);
+            }
+
             viewRight.setVisibility(View.GONE);
             viewLeft.setVisibility(View.GONE);
         }else if(m_List.get(position).type == 1){
             text.setBackgroundResource(R.drawable.outbox2);
             layout.setGravity(Gravity.RIGHT);
+
+            if(m_List.get(position).msg.length() > 15) {
+                layout.setPadding(0, 0, 10, 40);
+            } else {
+                layout.setPadding(0, 0, 10, 20);
+            }
+
             viewRight.setVisibility(View.GONE);
             viewLeft.setVisibility(View.GONE);
         }else if(m_List.get(position).type == 2){
@@ -117,31 +160,6 @@ public class CustomAdapter extends BaseAdapter {
             viewRight.setVisibility(View.VISIBLE);
             viewLeft.setVisibility(View.VISIBLE);
         }
-
-
-
-        // 리스트 아이템을 터치 했을 때 이벤트 발생
-        convertView.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                // 터치 시 해당 아이템 이름 출력
-                Toast.makeText(context, "리스트 클릭 : "+m_List.get(pos), Toast.LENGTH_SHORT).show();
-            }
-        });
-
-
-
-        // 리스트 아이템을 길게 터치 했을때 이벤트 발생
-        convertView.setOnLongClickListener(new View.OnLongClickListener() {
-
-            @Override
-            public boolean onLongClick(View v) {
-                // 터치 시 해당 아이템 이름 출력
-                Toast.makeText(context, "리스트 롱 클릭 : "+m_List.get(pos), Toast.LENGTH_SHORT).show();
-                return true;
-            }
-        });
 
         return convertView;
     }

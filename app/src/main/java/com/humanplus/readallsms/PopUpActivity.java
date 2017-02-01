@@ -84,7 +84,9 @@ public class PopUpActivity extends Activity {
             case R.id.SMS_SEND_BUTTON:
                 String input = editText.getText().toString();
                 SmsManager smsManager = SmsManager.getDefault();
-                smsManager.sendTextMessage(address, null, input, null, null);
+                if(!input.isEmpty()) {
+                    smsManager.sendTextMessage(address, null, input, null, null);
+                }
                 finish();
                 break;
         }
