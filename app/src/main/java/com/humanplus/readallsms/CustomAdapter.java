@@ -25,10 +25,12 @@ public class CustomAdapter extends BaseAdapter {
         int type;
         ListContents(String _msg,int _type)
         {
+
             int len = _msg.length();
             int count = 0;
             String temp = "";
 
+            // 너무 길어지면 이상해지기 때문에 잘라줌
             while(true) {
                 if(len - count < 10) {
                     temp += _msg.substring(count, len);
@@ -39,18 +41,6 @@ public class CustomAdapter extends BaseAdapter {
                 if(count != len)
                     temp += "\n";
             }
-            /*
-            // Used substring method to handle long message
-            if(_msg.length() > 15) {
-                String temp = "";
-                temp += _msg.substring(0, 9);
-                temp += "\n";
-                temp += _msg.substring(10, _msg.length());
-                this.msg = temp;
-            } else {
-                this.msg = _msg;
-            }
-            */
 
             this.msg = temp;
             this.type = _type;

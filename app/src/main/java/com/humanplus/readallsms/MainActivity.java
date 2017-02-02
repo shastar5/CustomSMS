@@ -2,9 +2,11 @@ package com.humanplus.readallsms;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -25,6 +27,8 @@ import android.widget.Toast;
 import static android.widget.Toast.LENGTH_SHORT;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int MY_PERMISSIONS_REQUEST = 10;
     private boolean check = false;
     private int requestCode = 1;
     private final int SMS_MESSAGE = 2;
@@ -33,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private EditText inputText;
     private String addr;
+
+    private BroadcastReceiver myReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,8 +49,13 @@ public class MainActivity extends AppCompatActivity {
         inputText = (EditText)findViewById(R.id.SMS_Input);
 
         // 권한 요청
-        requestPermission(this);
+        requestPermission();
 
+        // Register receiver for SMS_RECEIVE
+        myReceiver = new MyReceiver();
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        intentFilter.addAction("android.provider.Telephony.SMS_RECEIVED");
+        registerReceiver(myReceiver, intentFilter);
     }
 
     protected void onClickButton(View v) {
@@ -65,51 +76,25 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // 권한 요청 부분
-    private void requestPermission(Activity activity) {
-        final Activity currentActivity = activity;
-        int permissionCheck = ContextCompat.checkSelfPermission(currentActivity, Manifest.permission.READ_SMS);
+    private void requestPermission() {
 
-        // The case we do not need to check permissions.
-        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.M || permissionCheck == PackageManager.PERMISSION_GRANTED) {
-            check = true;
-        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
+                (PackageManager.PERMISSION_GRANTED != ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS))) {
 
-        //  When denied
-        if(permissionCheck == PackageManager.PERMISSION_DENIED) {
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS);
-            ContextCompat.checkSelfPermission(this, Manifest.permission.SEND_SMS);
-
-            // If we need additional explanation for using permission.
-            if(ActivityCompat.shouldShowRequestPermissionRationale(currentActivity, Manifest.permission.READ_SMS)) {
-
-                // Pop up dialog to grant permission from user.
-                AlertDialog.Builder dialog = new AlertDialog.Builder(currentActivity);
-                dialog.setTitle("권한 요청")
-                        .setMessage("메세지를 읽고 씁니다.")
-                        .setPositiveButton("수락하기", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                ActivityCompat.requestPermissions(currentActivity,
-                                        new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS}, requestCode);
-                                check = true;
-                            }
-                        })
-                        .setNegativeButton("거절", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
-                                Toast.makeText(currentActivity, "요청이 거절되었습니다.", LENGTH_SHORT).show();
-                                return;
-                            }
-                        }).create().show();
-                return;
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.READ_CONTACTS)) {
             } else {
-
-                // Request READ_CONTACT to android system
-                // 최초 실행시 권한 요청
-                ActivityCompat.requestPermissions(currentActivity,
-                        new String[]{Manifest.permission.READ_SMS, Manifest.permission.SEND_SMS}, requestCode);
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.READ_SMS,
+                                Manifest.permission.SEND_SMS,
+                                Manifest.permission.RECEIVE_SMS},
+                        MY_PERMISSIONS_REQUEST);
             }
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(myReceiver);
     }
 }
